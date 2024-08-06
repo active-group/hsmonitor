@@ -1,0 +1,6 @@
+cradle:
+  cabal:
+    - path: "src"
+      component: "hsmonitor:lib:hsmonitor"
+    - path: "app"
+      component: "hsmonitor:exe:hsmonitor"

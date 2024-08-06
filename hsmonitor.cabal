@@ -1,0 +1,49 @@
+cabal-version:      3.0
+name:               hsmonitor
+version:            0.1.0.0
+license:            BSD-3-Clause
+author:             Felix Leitz
+maintainer:         felix.leitz@active-group.de
+copyright:          2024 Active Group GmbH
+category:           Web
+build-type:         Simple
+extra-source-files: README.md
+
+common options
+  ghc-options:      -Wall -threaded -O2
+  default-language: GHC2021
+
+library
+  import:          options
+  hs-source-dirs:  src
+  exposed-modules:
+    Cmd
+    Port
+    Riemann
+    Scheduler
+    Types
+    Webpage
+
+  build-depends:
+    , async
+    , base
+    , bytestring
+    , http-conduit
+    , http-types
+    , process
+    , random
+    , time
+
+executable hsmonitor
+  import:           options
+  hs-source-dirs:   app
+  main-is:          Main.hs
+  default-language: GHC2021
+  other-modules:
+    Config
+    Options
+
+  build-depends:
+    , base
+    , hsmonitor
+    , optparse-applicative
