@@ -12,9 +12,9 @@ import Network.Mail.Mime qualified as Mime
 import Network.Mail.SMTP qualified as Mail
 import Types
 
-data Relay = Relay
-  { host :: String
-  , port :: Int
+data Server = Server
+  { mailHost :: String
+  , mailPort :: Int
   , username :: String
   , password :: String
   }
@@ -24,7 +24,7 @@ data MailTask = MailTask
   { sender :: String
   , receiver :: String
   , mailContent :: String
-  , relay :: Relay
+  , server :: Server
   }
   deriving (Show)
 
@@ -34,10 +34,10 @@ mail =
     { sender = ""
     , receiver = ""
     , mailContent = ""
-    , relay =
-        Relay
-          { host = ""
-          , port = 25
+    , server =
+        Server
+          { mailHost = ""
+          , mailPort = 25
           , username = ""
           , password = ""
           }
@@ -86,7 +86,7 @@ checkMail mt =
             (fromString $ "HSMonitor test mail " <> date)
             [Mime.plainPart $ fromString $ "Date: " <> date <> "\r\n" <> mt.mailContent]
 
-    (MailSendSuccess <$ Mail.sendMailWithLoginSTARTTLS' mt.relay.host (fromIntegral mt.relay.port) mt.relay.username mt.relay.password email)
+    (MailSendSuccess <$ Mail.sendMailWithLoginSTARTTLS' mt.server.mailHost (fromIntegral mt.server.mailPort) mt.server.username mt.server.password email)
       `catch` ( \(e :: SomeException) ->
                   pure $ MailSendFailure $ show e
               )
