@@ -5,6 +5,7 @@
 
 module Webpage where
 
+import Codec.Binary.UTF8.String qualified as UTF8
 import Control.Exception
 import Data.ByteString qualified as BS
 import Data.ByteString.Char8 qualified as Char8
@@ -19,7 +20,7 @@ data WebpageTask = WebpageTask
   { url :: String
   , toAppear :: [BS.ByteString]
   , runHeadless :: Bool
-  , basicAuth :: Maybe BS.ByteString
+  , basicAuth :: Maybe (String, String)
   , browserOptions :: [String]
   }
   deriving (Show)
@@ -46,10 +47,11 @@ data WebpageResponse
   | WebpageError String
   deriving (Show)
 
-withPossibleBasicAuth :: Maybe BS.ByteString -> Request -> Request
+withPossibleBasicAuth :: Maybe (String, String) -> Request -> Request
 withPossibleBasicAuth Nothing = id
-withPossibleBasicAuth (Just token) =
-  setRequestHeader "Authorization" ["Basic " <> token]
+withPossibleBasicAuth (Just (username, password)) =
+  let encode = Char8.pack . UTF8.encodeString
+   in setRequestBasicAuth (encode username) (encode password)
 
 getWebpage :: WebpageTask -> IO WebpageResponse
 getWebpage webpageTask
