@@ -36,6 +36,7 @@ library
     , random
     , smtp-mail
     , time
+    , utf8-string
 
 executable hsmonitor
   import:           options

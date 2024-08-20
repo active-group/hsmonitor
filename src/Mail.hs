@@ -5,6 +5,7 @@
 
 module Mail where
 
+import Codec.Binary.UTF8.String qualified as UTF8
 import Control.Exception
 import Data.String
 import Data.Time
@@ -86,7 +87,14 @@ checkMail mt =
             (fromString $ "HSMonitor test mail " <> date)
             [Mime.plainPart $ fromString $ "Date: " <> date <> "\r\n" <> mt.mailContent]
 
-    (MailSendSuccess <$ Mail.sendMailWithLoginSTARTTLS' mt.server.mailHost (fromIntegral mt.server.mailPort) mt.server.username mt.server.password email)
+    ( MailSendSuccess
+        <$ Mail.sendMailWithLoginSTARTTLS'
+          mt.server.mailHost
+          (fromIntegral mt.server.mailPort)
+          mt.server.username
+          (UTF8.encodeString mt.server.password)
+          email
+      )
       `catch` ( \(e :: SomeException) ->
                   pure $ MailSendFailure $ show e
               )
