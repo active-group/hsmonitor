@@ -17,7 +17,6 @@ import Types
 
 data WebpageTask = WebpageTask
   { url :: String
-  , service :: String
   , toAppear :: [BS.ByteString]
   , runHeadless :: Bool
   , basicAuth :: Maybe BS.ByteString
@@ -28,8 +27,7 @@ data WebpageTask = WebpageTask
 webpage :: WebpageTask
 webpage =
   WebpageTask
-    { service = ""
-    , url = ""
+    { url = ""
     , toAppear = []
     , runHeadless = False
     , basicAuth = Nothing
@@ -40,7 +38,6 @@ instance MonitoringTask WebpageTask where
   type TaskReponse WebpageTask = WebpageResponse
   check :: WebpageTask -> IO (TaskReponse WebpageTask)
   check = getWebpage
-  taskService wpt = wpt.service
   toRiemannEvent = webpageResponseToRiemannEvent
 
 data WebpageResponse
@@ -92,23 +89,26 @@ getWebpageHeadless webpageTask =
       _ -> pure $ WebpageKeywordsNotFound (map Char8.unpack missingKeywords)
     `catch` (\(e :: IOError) -> pure $ WebpageError $ show e)
 
-webpageResponseToRiemannEvent :: WebpageTask -> WebpageResponse -> RiemannEvent
-webpageResponseToRiemannEvent webpageTask = \case
+webpageResponseToRiemannEvent :: Service -> Maybe Host -> WebpageTask -> WebpageResponse -> RiemannEvent
+webpageResponseToRiemannEvent service host webpageTask = \case
   WebpageOk ->
     RiemannOk
-      { riemannService = webpageTask.service
+      { riemannService = service
       , metric = 1
+      , eventHost = host
       , description = "Found all expected keywords on webpage"
       }
   WebpageKeywordsNotFound missingKeywords ->
     RiemannCritical
-      { riemannService = webpageTask.service
+      { riemannService = service
       , metric = 1 - fromIntegral (length missingKeywords) / fromIntegral (length webpageTask.toAppear)
+      , eventHost = host
       , description = "Failed to find the following keywords on webpage: " <> intercalate ", " missingKeywords
       }
   WebpageError reason ->
     RiemannCritical
-      { riemannService = webpageTask.service
+      { riemannService = service
       , metric = 0
+      , eventHost = host
       , description = reason
       }

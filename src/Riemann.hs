@@ -12,22 +12,26 @@ sendToRiemann cfg re = do
   let cp =
         ( proc
             "riemann-client"
-            [ "-H"
-            , cfg.riemannHost
-            , "-P"
-            , show cfg.riemannPort
-            , "-T"
-            , "tcp"
-            , "send"
-            , "-s"
-            , re.riemannService
-            , "-m"
-            , show re.metric
-            , "-d"
-            , re.description
-            , "--ttl"
-            , "120"
-            ]
+            ( [ "-H"
+              , cfg.riemannHost
+              , "-P"
+              , show cfg.riemannPort
+              , "-T"
+              , "tcp"
+              , "send"
+              , "-s"
+              , re.riemannService
+              , "-m"
+              , show re.metric
+              , "-d"
+              , re.description
+              , "--ttl"
+              , "120"
+              ]
+                <> case re.eventHost of
+                  Nothing -> []
+                  Just h -> ["-h", h]
+            )
         )
           { std_err = NoStream
           }

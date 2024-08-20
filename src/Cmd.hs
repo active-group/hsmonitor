@@ -10,8 +10,7 @@ import System.Process
 import Types
 
 data CmdTask = CmdTask
-  { service :: String
-  , script :: String
+  { script :: String
   , inStdOut :: [String]
   , inStdErr :: [String]
   , exitCode :: ExitCode
@@ -22,8 +21,7 @@ data CmdTask = CmdTask
 cmd :: CmdTask
 cmd =
   CmdTask
-    { service = ""
-    , script = ""
+    { script = ""
     , inStdOut = []
     , inStdErr = []
     , exitCode = ExitSuccess
@@ -40,7 +38,6 @@ data CmdResult
 instance MonitoringTask CmdTask where
   type TaskReponse CmdTask = CmdResult
   check = checkCmdTask
-  taskService t = t.service
   toRiemannEvent = cmdToRiemannEvent
 
 checkCmdTask :: CmdTask -> IO CmdResult
@@ -59,29 +56,33 @@ checkCmdTask command = do
               | otherwise -> pure CmdOk
             _ -> pure $ CmdMissingKeywords missingKeywords
 
-cmdToRiemannEvent :: CmdTask -> CmdResult -> RiemannEvent
-cmdToRiemannEvent ct = \case
+cmdToRiemannEvent :: Service -> Maybe Host -> CmdTask -> CmdResult -> RiemannEvent
+cmdToRiemannEvent service host ct = \case
   CmdOk ->
     RiemannOk
-      { riemannService = ct.service
+      { riemannService = service
       , metric = 1
+      , eventHost = host
       , description = "Command " <> ct.script <> " was successful"
       }
   CmdWrongExitCode code ->
     RiemannCritical
-      { riemannService = ct.service
+      { riemannService = service
       , metric = 0
+      , eventHost = host
       , description = "Command " <> ct.script <> " exited with wrong exit code. Expected " <> show ct.exitCode <> " but got " <> show code
       }
   CmdMissingKeywords keywords ->
     RiemannCritical
-      { riemannService = ct.service
+      { riemannService = service
       , metric = 1 - fromIntegral (length keywords) / fromIntegral (length ct.inStdErr + length ct.inStdOut)
+      , eventHost = host
       , description = "Command " <> ct.script <> " output is missing the keywords: " <> intercalate ", " keywords
       }
   CmdStdErrorNotEmpty stderr ->
     RiemannCritical
-      { riemannService = ct.service
+      { riemannService = service
       , metric = 0
+      , eventHost = host
       , description = "Command " <> ct.script <> " stderr output was not empty: " <> stderr
       }

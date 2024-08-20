@@ -9,8 +9,7 @@ import GHC.IO.Exception
 import Types
 
 data PortTask = PortTask
-  { service :: String
-  , host :: String
+  { portHost :: String
   , port :: Int
   , portType :: PortType
   }
@@ -22,8 +21,7 @@ data PortType = UDP | TCP
 portTask :: PortTask
 portTask =
   PortTask
-    { Port.service = ""
-    , host = ""
+    { portHost = ""
     , port = 80
     , portType = TCP
     }
@@ -31,7 +29,6 @@ portTask =
 instance MonitoringTask PortTask where
   type TaskReponse PortTask = Bool
   check = checkPort
-  taskService t = t.service
   toRiemannEvent = portResultToRiemannEvent
 
 checkPort :: PortTask -> IO Bool
@@ -43,10 +40,9 @@ checkPort pt =
    in fmap interpretResult $
         check $
           CmdTask
-            { Cmd.service = pt.service
-            , script = "nc -vvv" <> udp <> " -q 5 -w 1 " <> pt.host <> " " <> show pt.port
+            { script = "nc -vvv" <> udp <> " -q 5 -w 1 " <> pt.portHost <> " " <> show pt.port
             , inStdOut = []
-            , inStdErr = expectedPortType <> [show pt.port, pt.host, "succeeded!"]
+            , inStdErr = expectedPortType <> [show pt.port, pt.portHost, "succeeded!"]
             , exitCode = ExitSuccess
             , expectEmptyError = False
             }
@@ -58,16 +54,18 @@ checkPort pt =
       CmdOk -> True
       _ -> False
 
-portResultToRiemannEvent :: PortTask -> Bool -> RiemannEvent
-portResultToRiemannEvent pt True =
+portResultToRiemannEvent :: Service -> Maybe Host -> PortTask -> Bool -> RiemannEvent
+portResultToRiemannEvent service host pt True =
   RiemannOk
-    { riemannService = pt.service
+    { riemannService = service
     , metric = 1
-    , description = show pt.portType <> " Port " <> show pt.port <> " on " <> pt.host <> " is open"
+    , eventHost = host
+    , description = show pt.portType <> " Port " <> show pt.port <> " on " <> pt.portHost <> " is open"
     }
-portResultToRiemannEvent pt False =
+portResultToRiemannEvent service host pt False =
   RiemannCritical
-    { riemannService = pt.service
+    { riemannService = service
     , metric = 0
-    , description = show pt.portType <> " Port " <> show pt.port <> " on " <> pt.host <> " is not open"
+    , eventHost = host
+    , description = show pt.portType <> " Port " <> show pt.port <> " on " <> pt.portHost <> " is not open"
     }

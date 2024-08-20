@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedRecordDot #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module Scheduler where
 
@@ -16,18 +17,18 @@ runSchedule cfg (MonitoringConfig tasks) = do
   putStrLn $ "Running schedule with: " <> show (length tasks) <> " tasks"
   mapConcurrently_ (createJob cfg) tasks
 
-createJob :: Config -> (Int, Task) -> IO ()
-createJob cfg (taskIntervalMinutes, Task t) = do
+createJob :: Config -> Task -> IO ()
+createJob cfg Task{..} = do
   when cfg.startupDelay $ do
     startupDelay <- (1_000_000 *) <$> randomRIO (0, 60)
     threadDelay startupDelay
   now <- getCurrentTime
   go now
   where
-    taskInterval = fromIntegral $ taskIntervalMinutes * 60
+    taskInterval = fromIntegral $ interval * 60
 
     go lastExec = do
-      execTask cfg t
+      execTask service host timeout cfg checkTask
       (delay, newLastExec) <- first ((1_000_000 *) . round) <$> delayToNextExec lastExec taskInterval
       threadDelay delay
       go newLastExec
@@ -38,19 +39,20 @@ delayToNextExec lastExecTime interval = do
   delay <- diffUTCTime nextExecTime <$> getCurrentTime
   pure (delay, nextExecTime)
 
-execTask :: (MonitoringTask t) => Config -> t -> IO ()
-execTask cfg t = do
+execTask :: (MonitoringTask t) => Service -> Maybe Host -> NominalDiffTime -> Config -> t -> IO ()
+execTask service host timeout cfg t = do
   res <-
     race
-      (threadDelay (1_000_000 * round (timeout t)))
+      (threadDelay (1_000_000 * round timeout))
       (check t)
 
   case res of
     Left () ->
       print $
         RiemannCritical
-          { riemannService = taskService t
+          { riemannService = service
           , metric = 0
-          , description = "Timeout reached: " <> show (timeout t)
+          , eventHost = host
+          , description = "Timeout reached: " <> show timeout
           }
-    Right response -> sendToRiemann cfg $ toRiemannEvent t response
+    Right response -> sendToRiemann cfg $ toRiemannEvent service host t response

@@ -5,17 +5,19 @@ module Types where
 
 import Data.Time
 
-newtype MonitoringConfig = MonitoringConfig {monitoringTasks :: [(Int, Task)]}
+newtype MonitoringConfig = MonitoringConfig {monitoringTasks :: [Task]}
 
 data RiemannEvent
   = RiemannOk
       { riemannService :: String
       , metric :: Double
+      , eventHost :: Maybe Host
       , description :: String
       }
   | RiemannCritical
       { riemannService :: String
       , metric :: Double
+      , eventHost :: Maybe Host
       , description :: String
       }
   deriving (Show)
@@ -23,13 +25,32 @@ data RiemannEvent
 class MonitoringTask t where
   type TaskReponse t
   check :: t -> IO (TaskReponse t)
-  taskService :: t -> String
-  toRiemannEvent :: t -> TaskReponse t -> RiemannEvent
-  timeout :: t -> NominalDiffTime
-  timeout _ = 10
+  toRiemannEvent :: Service -> Maybe Host -> t -> TaskReponse t -> RiemannEvent
+
+type Service = String
+
+type Host = String
 
 data Task where
-  Task :: (MonitoringTask t) => t -> Task
+  Task ::
+    (MonitoringTask t) =>
+    { interval :: Int
+    , service :: Service
+    , host :: Maybe Host
+    , timeout :: NominalDiffTime
+    , checkTask :: t
+    } ->
+    Task
+
+task :: (MonitoringTask t) => Service -> t -> Task
+task service t =
+  Task
+    { interval = 1
+    , service = service
+    , host = Nothing
+    , timeout = 10
+    , checkTask = t
+    }
 
 data Config = Config
   { riemannHost :: String
