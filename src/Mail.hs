@@ -77,7 +77,7 @@ checkMail mt =
     now <- getCurrentTime
     let date = formatTime defaultTimeLocale "%F %T" now
 
-    let mail =
+    let email =
           Mail.simpleMail
             (fromString mt.sender)
             [fromString mt.receiver]
@@ -86,7 +86,7 @@ checkMail mt =
             (fromString $ "HSMonitor test mail " <> date)
             [Mime.plainPart $ fromString $ "Date: " <> date <> "\r\n" <> mt.mailContent]
 
-    (MailSendSuccess <$ Mail.sendMailWithLoginSTARTTLS' mt.relay.host (fromIntegral mt.relay.port) mt.relay.username mt.relay.password mail)
+    (MailSendSuccess <$ Mail.sendMailWithLoginSTARTTLS' mt.relay.host (fromIntegral mt.relay.port) mt.relay.username mt.relay.password email)
       `catch` ( \(e :: SomeException) ->
                   pure $ MailSendFailure $ show e
               )

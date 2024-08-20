@@ -10,7 +10,7 @@ build-type:         Simple
 extra-source-files: README.md
 
 common options
-  ghc-options:      -Wall -threaded -O2
+  ghc-options:      -Wall -threaded -O2 -Werror
   default-language: GHC2021
 
 library
