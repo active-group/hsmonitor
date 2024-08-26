@@ -15,9 +15,13 @@ python3.pkgs.buildPythonApplication rec {
     python3.pkgs.wheel
   ];
 
+  preBuild = ''
+    substituteInPlace setup.py --replace-fail 'protobuf>=3.2.0,<4.0.0' 'protobuf>4.0.0'
+  '';
+
   propagatedBuildInputs = with python3.pkgs; [
     click
-    (import ../protobuf { inherit lib python3; })
+    protobuf
   ];
 
   passthru.optional-dependencies = with python3.pkgs; {
