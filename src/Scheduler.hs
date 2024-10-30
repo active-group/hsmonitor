@@ -19,8 +19,8 @@ runSchedule cfg (MonitoringConfig tasks) = do
 
 createJob :: Config -> Task -> IO ()
 createJob cfg Task{..} = do
-  when cfg.startupDelay $ do
-    startupDelay <- (1_000_000 *) <$> randomRIO (0, 60)
+  when (cfg.startupDelay > 0) $ do
+    startupDelay <- (1_000_000 *) <$> randomRIO (0, cfg.startupDelay)
     threadDelay startupDelay
   now <- getCurrentTime
   go now

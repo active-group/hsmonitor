@@ -6,4 +6,4 @@ schedule :: MonitoringConfig
 schedule = MonitoringConfig []
 
 cfg :: Config
-cfg = Config "localhost" 5555 True
+cfg = Config "localhost" 5555 60

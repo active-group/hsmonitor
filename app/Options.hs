@@ -32,12 +32,11 @@ config cfg =
         )
 
     startupDelay =
-      flag
-        True
-        False
-        ( long "no-startup-delay"
+      option
+        auto
+        ( long "startup-delay"
             <> short 'd'
-            <> help "Disable startup delay for checks"
+            <> help "Specify maximum startup delay to use when first scheduling checks"
             <> showDefault
         )
 
