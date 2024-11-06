@@ -34,11 +34,9 @@ createJob cfg Task{..} = do
   now <- getCurrentTime
   go now
   where
-    taskInterval = fromIntegral $ interval * 60
-
     go lastExec = do
       execTask service host timeout cfg checkTask
-      (delay, newLastExec) <- delayToNextExec lastExec taskInterval
+      (delay, newLastExec) <- delayToNextExec lastExec interval
       delayBy delay
       go newLastExec
 

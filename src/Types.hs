@@ -34,7 +34,7 @@ type Host = String
 data Task where
   Task ::
     (MonitoringTask t) =>
-    { interval :: Int
+    { interval :: NominalDiffTime
     , service :: Service
     , host :: Maybe Host
     , timeout :: NominalDiffTime
