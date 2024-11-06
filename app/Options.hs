@@ -2,6 +2,7 @@
 
 module Options where
 
+import Data.Time
 import Options.Applicative
 import Types
 
@@ -33,12 +34,18 @@ config cfg =
 
     startupDelay =
       option
-        auto
-        ( long "startup-delay"
+        (maybeReader parseNominalDiffTime)
+        ( long "max-startup-delay"
             <> short 'd'
-            <> help "Specify maximum startup delay to use when first scheduling checks"
+            <> help "Specify maximum startup delay (in seconds) to use when first scheduling checks"
             <> showDefault
         )
+
+parseNominalDiffTime :: String -> Maybe NominalDiffTime
+parseNominalDiffTime inp =
+  case reads (inp <> "s") of
+    [(x, "")] -> Just x
+    _ -> Nothing
 
 opts :: Config -> ParserInfo Config
 opts cfg =
