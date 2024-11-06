@@ -55,6 +55,6 @@ task service t =
 data Config = Config
   { riemannHost :: String
   , riemannPort :: Int
-  , startupDelay :: Int
+  , startupDelay :: NominalDiffTime
   }
   deriving (Show)

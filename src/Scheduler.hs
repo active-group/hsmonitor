@@ -3,7 +3,6 @@
 
 module Scheduler where
 
-import Control.Arrow
 import Control.Concurrent
 import Control.Concurrent.Async
 import Control.Monad
@@ -17,11 +16,20 @@ runSchedule cfg (MonitoringConfig tasks) = do
   putStrLn $ "Running schedule with: " <> show (length tasks) <> " tasks"
   mapConcurrently_ (createJob cfg) tasks
 
+delayBy :: NominalDiffTime -> IO ()
+delayBy = threadDelay . nominalDiffTimeToMicroseconds
+
+nominalDiffTimeToMicroseconds :: NominalDiffTime -> Int
+nominalDiffTimeToMicroseconds = round . (1_000_000 *) . nominalDiffTimeToSeconds
+
+microsecondsToNominalDiffTime :: Int -> NominalDiffTime
+microsecondsToNominalDiffTime = secondsToNominalDiffTime . (/ 1_000_000) . fromIntegral
+
 createJob :: Config -> Task -> IO ()
 createJob cfg Task{..} = do
   when (cfg.startupDelay > 0) $ do
-    startupDelay <- (1_000_000 *) <$> randomRIO (0, cfg.startupDelay)
-    threadDelay startupDelay
+    startupDelay <- microsecondsToNominalDiffTime <$> randomRIO (0, nominalDiffTimeToMicroseconds cfg.startupDelay)
+    delayBy startupDelay
   now <- getCurrentTime
   go now
   where
@@ -29,8 +37,8 @@ createJob cfg Task{..} = do
 
     go lastExec = do
       execTask service host timeout cfg checkTask
-      (delay, newLastExec) <- first ((1_000_000 *) . round) <$> delayToNextExec lastExec taskInterval
-      threadDelay delay
+      (delay, newLastExec) <- delayToNextExec lastExec taskInterval
+      delayBy delay
       go newLastExec
 
 delayToNextExec :: UTCTime -> NominalDiffTime -> IO (NominalDiffTime, UTCTime)
@@ -43,7 +51,7 @@ execTask :: (MonitoringTask t) => Service -> Maybe Host -> NominalDiffTime -> Co
 execTask service host timeout cfg t = do
   res <-
     race
-      (threadDelay (1_000_000 * round timeout))
+      (delayBy timeout)
       (check t)
 
   case res of
