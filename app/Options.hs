@@ -33,13 +33,14 @@ config cfg =
         )
 
     startupDelay =
-      option
-        (maybeReader parseNominalDiffTime)
-        ( long "max-startup-delay"
-            <> short 'd'
-            <> help "Specify maximum startup delay (in seconds) to use when first scheduling checks"
-            <> showDefault
-        )
+      optional $
+        option
+          (maybeReader parseNominalDiffTime)
+          ( long "max-startup-delay"
+              <> short 'd'
+              <> help "Specify maximum startup delay (in seconds) to use when first scheduling checks"
+              <> showDefault
+          )
 
 parseNominalDiffTime :: String -> Maybe NominalDiffTime
 parseNominalDiffTime inp =

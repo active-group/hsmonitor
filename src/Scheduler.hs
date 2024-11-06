@@ -5,7 +5,6 @@ module Scheduler where
 
 import Control.Concurrent
 import Control.Concurrent.Async
-import Control.Monad
 import Data.Time
 import Riemann
 import System.Random
@@ -27,9 +26,11 @@ microsecondsToNominalDiffTime = secondsToNominalDiffTime . (/ 1_000_000) . fromI
 
 createJob :: Config -> Task -> IO ()
 createJob cfg Task{..} = do
-  when (cfg.startupDelay > 0) $ do
-    startupDelay <- microsecondsToNominalDiffTime <$> randomRIO (0, nominalDiffTimeToMicroseconds cfg.startupDelay)
-    delayBy startupDelay
+  case cfg.startupDelay of
+    Just maxStartupDelay | maxStartupDelay > 0 -> do
+      startupDelay <- microsecondsToNominalDiffTime <$> randomRIO (0, nominalDiffTimeToMicroseconds maxStartupDelay)
+      delayBy startupDelay
+    _ -> pure ()
   now <- getCurrentTime
   go now
   where
