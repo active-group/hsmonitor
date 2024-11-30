@@ -40,6 +40,7 @@ config cfg =
               <> short 'd'
               <> help "Specify maximum startup delay (in seconds) to use when first scheduling checks"
               <> showDefault
+              <> maybe mempty value cfg.startupDelay
           )
 
 parseNominalDiffTime :: String -> Maybe NominalDiffTime
