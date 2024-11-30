@@ -45,7 +45,7 @@ data Task where
 task :: (MonitoringTask t) => Service -> t -> Task
 task service t =
   Task
-    { interval = 1
+    { interval = 60
     , service = service
     , host = Nothing
     , timeout = 10
