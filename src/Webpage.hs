@@ -1,6 +1,7 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedRecordDot #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TypeFamilies #-}
 
 module Webpage where
@@ -11,15 +12,23 @@ import Data.ByteString qualified as BS
 import Data.ByteString.Char8 qualified as Char8
 import Data.ByteString.Lazy qualified as LBS
 import Data.List
+import Debug.Trace
 import Network.HTTP.Simple
 import Network.HTTP.Types.Status
 import System.Process
 import Types
 
+data ChromeOptions
+  = WithoutChrome
+  | WithChrome
+      { virtualTimeBudget :: Maybe Int
+      }
+  deriving (Show)
+
 data WebpageTask = WebpageTask
   { url :: String
   , toAppear :: [BS.ByteString]
-  , runHeadless :: Bool
+  , useChrome :: ChromeOptions
   , basicAuth :: Maybe (String, String)
   , browserOptions :: [String]
   }
@@ -30,7 +39,7 @@ webpage =
   WebpageTask
     { url = ""
     , toAppear = []
-    , runHeadless = False
+    , useChrome = WithoutChrome
     , basicAuth = Nothing
     , browserOptions = []
     }
@@ -54,9 +63,10 @@ withPossibleBasicAuth (Just (username, password)) =
    in setRequestBasicAuth (encode username) (encode password)
 
 getWebpage :: WebpageTask -> IO WebpageResponse
-getWebpage webpageTask
-  | webpageTask.runHeadless = getWebpageHeadless webpageTask
-  | otherwise =
+getWebpage webpageTask =
+  case webpageTask.useChrome of
+    WithChrome{..} -> getWebpageHeadless webpageTask virtualTimeBudget
+    WithoutChrome ->
       do
         req <- withPossibleBasicAuth webpageTask.basicAuth <$> parseRequest webpageTask.url
         resp <- httpLBS req
@@ -79,10 +89,13 @@ customReadProcess cmd args =
   let cp = (proc cmd args){std_err = NoStream}
    in readCreateProcess cp
 
-getWebpageHeadless :: WebpageTask -> IO WebpageResponse
-getWebpageHeadless webpageTask =
+getWebpageHeadless :: WebpageTask -> Maybe Int -> IO WebpageResponse
+getWebpageHeadless webpageTask mVirtualBudget =
   do
-    let options = ["--headless", "--disable-gpu", "--dump-dom"] <> webpageTask.browserOptions <> [webpageTask.url]
+    let withVirtualWithBudget = case mVirtualBudget of
+          Just budget -> ["--virtual-time-budget=" <> show budget]
+          Nothing -> []
+    let options = traceShowId $ ["--headless", "--disable-gpu", "--dump-dom"] <> withVirtualWithBudget <> webpageTask.browserOptions <> [webpageTask.url]
     result <- Char8.pack <$> customReadProcess "chromium-browser" options ""
 
     let missingKeywords = filter (not . (`Char8.isInfixOf` result)) webpageTask.toAppear
