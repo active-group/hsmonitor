@@ -55,7 +55,7 @@ execTask service host timeout cfg t = do
 
   case res of
     Left () ->
-      print $
+      sendToRiemann cfg $
         RiemannCritical
           { riemannService = service
           , metric = 0
