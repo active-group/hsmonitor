@@ -14,8 +14,7 @@ config cfg =
     <*> startupDelay
   where
     riemannHost =
-      option
-        auto
+      strOption
         ( long "riemann-host"
             <> short 'h'
             <> help "Riemann Host"
