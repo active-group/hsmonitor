@@ -12,21 +12,18 @@ sendToRiemann cfg re = do
   let cp =
         ( proc
             "riemann-client"
-            ( [ "-H"
-              , cfg.riemannHost
-              , "-P"
-              , show cfg.riemannPort
+            ( [ "send"
               , "-T"
-              , "tcp"
-              , "send"
               , "-s"
               , re.riemannService
-              , "-m"
+              , "-f"
               , show re.metric
-              , "-d"
+              , "-D"
               , re.description
               , "--ttl"
               , "120"
+              , cfg.riemannHost
+              , show cfg.riemannPort
               ]
                 <> case re.eventHost of
                   Nothing -> []
