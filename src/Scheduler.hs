@@ -25,14 +25,27 @@ microsecondsToNominalDiffTime :: Int -> NominalDiffTime
 microsecondsToNominalDiffTime = secondsToNominalDiffTime . (/ 1_000_000) . fromIntegral
 
 createJob :: Config -> Task -> IO ()
-createJob cfg Task{..} = do
-  case cfg.startupDelay of
-    Just maxStartupDelay | maxStartupDelay > 0 -> do
-      startupDelay <- microsecondsToNominalDiffTime <$> randomRIO (0, nominalDiffTimeToMicroseconds maxStartupDelay)
-      delayBy startupDelay
-    _ -> pure ()
-  now <- getCurrentTime
-  go now
+createJob cfg t@Task{..}
+  | timeout > interval = do
+      putStrLn $
+        "Task "
+          <> show service
+          <> " has a timeout higher than interval ("
+          <> show timeout
+          <> " > "
+          <> show interval
+          <> " ). Reducing timeout to "
+          <> show interval
+          <> "."
+      createJob cfg t{timeout = t.interval}
+  | otherwise = do
+      case cfg.startupDelay of
+        Just maxStartupDelay | maxStartupDelay > 0 -> do
+          startupDelay <- microsecondsToNominalDiffTime <$> randomRIO (0, nominalDiffTimeToMicroseconds maxStartupDelay)
+          delayBy startupDelay
+        _ -> pure ()
+      now <- getCurrentTime
+      go now
   where
     go lastExec = do
       execTask service host timeout cfg checkTask
