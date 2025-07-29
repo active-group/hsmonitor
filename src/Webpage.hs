@@ -12,6 +12,7 @@ import Data.ByteString qualified as BS
 import Data.ByteString.Char8 qualified as Char8
 import Data.ByteString.Lazy qualified as LBS
 import Data.List
+import Data.Time
 import Debug.Trace
 import Network.HTTP.Simple
 import Network.HTTP.Types.Status
@@ -46,9 +47,15 @@ webpage =
 
 instance MonitoringTask WebpageTask where
   type TaskReponse WebpageTask = WebpageResponse
+  internalTimeout t = case t.useChrome of
+    WithoutChrome -> Nothing
+    WithChrome{virtualTimeBudget} -> millisecondsToNominalDiffTime <$> virtualTimeBudget
   check :: WebpageTask -> IO (TaskReponse WebpageTask)
   check = getWebpage
   toRiemannEvent = webpageResponseToRiemannEvent
+
+millisecondsToNominalDiffTime :: Int -> NominalDiffTime
+millisecondsToNominalDiffTime = secondsToNominalDiffTime . (/ 1_000) . fromIntegral
 
 data WebpageResponse
   = WebpageOk

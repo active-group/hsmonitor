@@ -24,6 +24,8 @@ data RiemannEvent
 
 class MonitoringTask t where
   type TaskReponse t
+  internalTimeout :: t -> Maybe NominalDiffTime
+  internalTimeout _ = Nothing
   check :: t -> IO (TaskReponse t)
   toRiemannEvent :: Service -> Maybe Host -> t -> TaskReponse t -> RiemannEvent
 
@@ -48,7 +50,7 @@ task service t =
     { interval = 60
     , service = service
     , host = Nothing
-    , timeout = 10
+    , timeout = maybe 10 (max 10) $ internalTimeout t
     , checkTask = t
     }
 
