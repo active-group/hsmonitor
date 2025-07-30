@@ -2,9 +2,18 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs";
     flake-utils.url = "github:numtide/flake-utils";
+    python-riemann-clientSrc = {
+      url = "github:lzszt/python-riemann-client";
+      flake = false;
+    };
   };
   outputs =
-    inputs@{ self, flake-utils, ... }:
+    inputs@{
+      self,
+      flake-utils,
+      python-riemann-clientSrc,
+      ...
+    }:
     flake-utils.lib.eachDefaultSystem (
       system:
       let
@@ -17,6 +26,7 @@
           riemann-client = import ./nix/riemann-client {
             lib = pkgs.lib;
             python3 = pkgs.python3;
+            src = python-riemann-clientSrc;
           };
           default = self.packages.${system}.${packageName};
         };

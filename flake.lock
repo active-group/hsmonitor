@@ -5,11 +5,11 @@
         "systems": "systems"
       },
       "locked": {
-        "lastModified": 1710146030,
-        "narHash": "sha256-SZ5L6eA7HJ/nmkzGG7/ISclqe6oZdOZTNoesiInkXPQ=",
+        "lastModified": 1731533236,
+        "narHash": "sha256-l0KFg5HjrsfsO/JpG+r7fRrqm12kzFHyUHqHCVpMMbI=",
         "owner": "numtide",
         "repo": "flake-utils",
-        "rev": "b1d9ab70662946ef0850d488da1c9019f3a9752a",
+        "rev": "11707dc2f618dd54ca8739b309ec4fc024de578b",
         "type": "github"
       },
       "original": {
@@ -20,11 +20,11 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1723919746,
-        "narHash": "sha256-EXbIbCq9NJpNYYtLiFH20+aXG3hHDUznENSeA9qNj5A=",
+        "lastModified": 1753859644,
+        "narHash": "sha256-/HorRXrvmXWfVC8grb/qm3RdYQxLu9bz7n02Rx5MvTA=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "ea65029804e62a41c49a82fb817a26c5f9d0942d",
+        "rev": "06e03d26ec0564e9ef99875db1d8e33739788430",
         "type": "github"
       },
       "original": {
@@ -33,10 +33,27 @@
         "type": "github"
       }
     },
+    "python-riemann-clientSrc": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1753859996,
+        "narHash": "sha256-NQPGYlyDUCT0SoiV2sHJNFf2bI+1Yyjr4YiHp/Z87Qc=",
+        "owner": "lzszt",
+        "repo": "python-riemann-client",
+        "rev": "a0899f199d37bdee6f2ed62e20eef3db0f0290de",
+        "type": "github"
+      },
+      "original": {
+        "owner": "lzszt",
+        "repo": "python-riemann-client",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
         "flake-utils": "flake-utils",
-        "nixpkgs": "nixpkgs"
+        "nixpkgs": "nixpkgs",
+        "python-riemann-clientSrc": "python-riemann-clientSrc"
       }
     },
     "systems": {
