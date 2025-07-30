@@ -14,6 +14,10 @@
       {
         packages = {
           ${packageName} = pkgs.haskell.lib.justStaticExecutables pkgs.haskellPackages.hsmonitor;
+          riemann-client = import ./nix/riemann-client {
+            lib = pkgs.lib;
+            python3 = pkgs.python3;
+          };
           default = self.packages.${system}.${packageName};
         };
 
@@ -28,7 +32,7 @@
               haskellPackages.ghcid
               haskellPackages.haskell-language-server
               haskellPackages.cabal-fmt
-              riemann_c_client
+              self.packages.${system}.riemann-client
               netcat-openbsd
               chromium
             ];
