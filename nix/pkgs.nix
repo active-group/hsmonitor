@@ -1,6 +1,6 @@
 { inputs, system }:
 let
-  overlays = import ./overlays.nix { inherit inputs; };
+  overlays = import ./overlays.nix;
   config = {
     allowBroken = false;
   };
