@@ -14,21 +14,16 @@
       python-riemann-clientSrc,
       ...
     }:
-    flake-utils.lib.eachDefaultSystem (
+    (flake-utils.lib.eachDefaultSystem (
       system:
       let
         pkgs = import ./nix/pkgs.nix { inherit inputs system; };
-        packageName = "hsmonitor";
       in
       {
         packages = {
-          ${packageName} = pkgs.haskell.lib.justStaticExecutables pkgs.haskellPackages.hsmonitor;
-          riemann-client = import ./nix/riemann-client {
-            lib = pkgs.lib;
-            python3 = pkgs.python3;
-            src = python-riemann-clientSrc;
-          };
-          default = self.packages.${system}.${packageName};
+          hsmonitor = pkgs.haskell.lib.justStaticExecutables pkgs.haskellPackages.hsmonitor;
+          riemann-client = pkgs.riemann-client;
+          default = self.packages.${system}.hsmonitor;
         };
 
         devShells = {
@@ -42,7 +37,7 @@
               haskellPackages.ghcid
               haskellPackages.haskell-language-server
               haskellPackages.cabal-fmt
-              self.packages.${system}.riemann-client
+              pkgs.riemann-client
               netcat-openbsd
               chromium
             ];
@@ -50,5 +45,8 @@
         };
 
       }
-    );
+    ))
+    // {
+      overlays.default = import ./nix/overlays.nix { inherit inputs; };
+    };
 }

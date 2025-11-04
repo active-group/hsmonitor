@@ -1,3 +1,4 @@
+{ inputs, ... }:
 let
   customHaskellPackages = self: super: {
     haskellPackages = super.haskellPackages.override {
@@ -18,6 +19,11 @@ let
           inherit hsmonitor;
         };
     };
+    riemann-client = import ./riemann-client {
+      lib = super.lib;
+      python3 = super.python3;
+      src = inputs.python-riemann-clientSrc;
+    };
   };
 in
-[ customHaskellPackages ]
+customHaskellPackages
