@@ -6,6 +6,7 @@
 module Port where
 
 import Cmd
+import Data.Bifunctor
 import GHC.IO.Exception
 import Types
 
@@ -33,7 +34,7 @@ instance MonitoringTask PortTask where
   toRiemannEvent = portResultToRiemannEvent
   prettyCommand = fst . checkPort
 
-checkPort :: PortTask -> (String, IO Bool)
+checkPort :: PortTask -> (String, IO (RawOutput, Bool))
 checkPort pt =
   let udp =
         case pt.portType of
@@ -41,7 +42,7 @@ checkPort pt =
           _ -> ""
       netcatCall = "nc -vvv" <> udp <> " -q 5 -w 1 " <> pt.portHost <> " " <> show pt.port
    in ( netcatCall
-      , fmap interpretResult $
+      , fmap (second interpretResult) $
           check $
             CmdTask
               { script = netcatCall

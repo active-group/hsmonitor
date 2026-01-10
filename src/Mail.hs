@@ -73,7 +73,7 @@ mailReponseToRiemannEvent service host mt = \case
           "Sending mail from '" <> mt.sender <> "' to '" <> mt.receiver <> "' failed, response was: '" <> err <> "'"
       }
 
-checkMail :: MailTask -> (String, IO MailResponse)
+checkMail :: MailTask -> (String, IO (RawOutput, MailResponse))
 checkMail mt =
   let email date =
         Mail.simpleMail
@@ -88,7 +88,7 @@ checkMail mt =
         now <- getCurrentTime
         let date = formatTime defaultTimeLocale "%F %T" now
 
-        ( MailSendSuccess
+        ( ([], MailSendSuccess)
             <$ Mail.sendMailWithLoginSTARTTLS'
               mt.server.mailHost
               (fromIntegral mt.server.mailPort)
@@ -97,6 +97,6 @@ checkMail mt =
               (email date)
           )
           `catch` ( \(e :: SomeException) ->
-                      pure $ MailSendFailure $ show e
+                      pure ([], MailSendFailure $ show e)
                   )
    in (show $ email "CURRENT DATE", taskCheck)

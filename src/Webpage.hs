@@ -49,7 +49,6 @@ instance MonitoringTask WebpageTask where
   internalTimeout t = case t.useChrome of
     WithoutChrome -> Nothing
     WithChrome{virtualTimeBudget} -> millisecondsToNominalDiffTime <$> virtualTimeBudget
-  check :: WebpageTask -> IO (TaskReponse WebpageTask)
   check = snd . getWebpage
   toRiemannEvent = webpageResponseToRiemannEvent
   prettyCommand = fst . getWebpage
@@ -69,17 +68,18 @@ withPossibleBasicAuth (Just (username, password)) =
   let encode = Char8.pack . UTF8.encodeString
    in setRequestBasicAuth (encode username) (encode password)
 
-getWebpage :: WebpageTask -> (String, IO WebpageResponse)
+getWebpage :: WebpageTask -> (String, IO (RawOutput, WebpageResponse))
 getWebpage webpageTask =
   case webpageTask.useChrome of
     WithChrome{..} -> getWebpageHeadless webpageTask virtualTimeBudget
     WithoutChrome ->
       let curlCall = "curl " <> maybe "" (\(user, password) -> "-u \"" <> user <> ":" <> password <> "\"") webpageTask.basicAuth <> webpageTask.url
+          taskCheck :: IO (RawOutput, WebpageResponse)
           taskCheck =
             do
               req <- withPossibleBasicAuth webpageTask.basicAuth <$> parseRequest webpageTask.url
               resp <- httpLBS req
-              case getResponseStatus resp of
+              ([Char8.unpack $ LBS.toStrict $ getResponseBody resp],) <$> case getResponseStatus resp of
                 Status 200 _ ->
                   let content = LBS.toStrict $ getResponseBody resp
                       missingKeywords = filter (not . (`Char8.isInfixOf` content)) webpageTask.toAppear
@@ -87,11 +87,7 @@ getWebpage webpageTask =
                         [] -> pure WebpageOk
                         _ -> pure $ WebpageKeywordsNotFound (map Char8.unpack missingKeywords)
                 Status _ reason -> pure $ WebpageError $ Char8.unpack reason
-              `catch` ( \(e :: HttpException) ->
-                          pure $
-                            WebpageError $
-                              show e
-                      )
+              `catch` (\(e :: HttpException) -> pure ([], WebpageError $ show e))
        in (curlCall, taskCheck)
 
 customReadProcess :: FilePath -> [String] -> String -> IO String
@@ -99,7 +95,7 @@ customReadProcess cmd args =
   let cp = (proc cmd args){std_err = NoStream}
    in readCreateProcess cp
 
-getWebpageHeadless :: WebpageTask -> Maybe Int -> (String, IO WebpageResponse)
+getWebpageHeadless :: WebpageTask -> Maybe Int -> (String, IO (RawOutput, WebpageResponse))
 getWebpageHeadless webpageTask mVirtualBudget =
   let withVirtualWithBudget = case mVirtualBudget of
         Just budget -> ["--virtual-time-budget=" <> show budget]
@@ -112,9 +108,9 @@ getWebpageHeadless webpageTask mVirtualBudget =
 
           let missingKeywords = filter (not . (`Char8.isInfixOf` result)) webpageTask.toAppear
           case missingKeywords of
-            [] -> pure WebpageOk
-            _ -> pure $ WebpageKeywordsNotFound (map Char8.unpack missingKeywords)
-          `catch` (\(e :: IOError) -> pure $ WebpageError $ show e)
+            [] -> pure ([Char8.unpack result], WebpageOk)
+            _ -> pure ([Char8.unpack result], WebpageKeywordsNotFound (map Char8.unpack missingKeywords))
+          `catch` (\(e :: IOError) -> pure ([], WebpageError $ show e))
    in (chromeCall, taskCheck)
 
 webpageResponseToRiemannEvent :: Service -> Maybe Host -> WebpageTask -> WebpageResponse -> RiemannEvent

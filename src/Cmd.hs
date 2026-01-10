@@ -45,21 +45,22 @@ instance MonitoringTask CmdTask where
 prettyPrintCmd :: CmdTask -> String
 prettyPrintCmd t = t.script
 
-checkCmdTask :: CmdTask -> IO CmdResult
+checkCmdTask :: CmdTask -> IO (RawOutput, CmdResult)
 checkCmdTask command = do
   let cp = shell command.script
   (code, stdout, stderr) <- readCreateProcessWithExitCode cp ""
-  if code /= command.exitCode
-    then pure $ CmdWrongExitCode code
-    else
-      let missingKeywords =
-            filter (not . (`isInfixOf` stdout)) command.inStdOut
-              <> filter (not . (`isInfixOf` stderr)) command.inStdErr
-       in case missingKeywords of
-            []
-              | command.expectEmptyError, not (null stderr) -> pure $ CmdStdErrorNotEmpty stderr
-              | otherwise -> pure CmdOk
-            _ -> pure $ CmdMissingKeywords missingKeywords
+  ([stdout, stderr],)
+    <$> if code /= command.exitCode
+      then pure $ CmdWrongExitCode code
+      else
+        let missingKeywords =
+              filter (not . (`isInfixOf` stdout)) command.inStdOut
+                <> filter (not . (`isInfixOf` stderr)) command.inStdErr
+         in case missingKeywords of
+              []
+                | command.expectEmptyError, not (null stderr) -> pure $ CmdStdErrorNotEmpty stderr
+                | otherwise -> pure CmdOk
+              _ -> pure $ CmdMissingKeywords missingKeywords
 
 cmdToRiemannEvent :: Service -> Maybe Host -> CmdTask -> CmdResult -> RiemannEvent
 cmdToRiemannEvent service host ct = \case

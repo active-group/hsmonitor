@@ -23,11 +23,13 @@ data RiemannEvent
       }
   deriving (Show)
 
+type RawOutput = [String]
+
 class MonitoringTask t where
   type TaskReponse t
   internalTimeout :: t -> Maybe NominalDiffTime
   internalTimeout _ = Nothing
-  check :: t -> IO (TaskReponse t)
+  check :: t -> IO (RawOutput, TaskReponse t)
   toRiemannEvent :: Service -> Maybe Host -> t -> TaskReponse t -> RiemannEvent
   prettyCommand :: t -> String
 
