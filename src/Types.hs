@@ -65,5 +65,14 @@ data RiemannConfig
 data Config = Config
   { riemannConfig :: Maybe RiemannConfig
   , startupDelay :: Maybe NominalDiffTime
+  , debug :: Bool
   }
   deriving (Show)
+
+defaultConfig :: Config
+defaultConfig =
+  Config
+    { riemannConfig = Nothing
+    , startupDelay = Nothing
+    , debug = False
+    }

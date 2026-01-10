@@ -11,7 +11,16 @@ config cfg =
   Config
     <$> optional riemannConfig
     <*> startupDelay
+    <*> debug
   where
+    debug =
+      flag
+        False
+        True
+        ( long "debug"
+            <> help "Enables debug printing of commands and outputs"
+        )
+
     riemannHost =
       strOption
         ( long "riemann-host"
