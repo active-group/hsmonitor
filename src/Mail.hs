@@ -51,8 +51,9 @@ data MailResponse
 
 instance MonitoringTask MailTask where
   type TaskReponse MailTask = MailResponse
-  check = checkMail
+  check = snd . checkMail
   toRiemannEvent = mailReponseToRiemannEvent
+  prettyCommand = fst . checkMail
 
 mailReponseToRiemannEvent :: Service -> Maybe Host -> MailTask -> MailResponse -> RiemannEvent
 mailReponseToRiemannEvent service host mt = \case
@@ -72,29 +73,30 @@ mailReponseToRiemannEvent service host mt = \case
           "Sending mail from '" <> mt.sender <> "' to '" <> mt.receiver <> "' failed, response was: '" <> err <> "'"
       }
 
-checkMail :: MailTask -> IO MailResponse
+checkMail :: MailTask -> (String, IO MailResponse)
 checkMail mt =
-  do
-    now <- getCurrentTime
-    let date = formatTime defaultTimeLocale "%F %T" now
+  let email date =
+        Mail.simpleMail
+          (fromString mt.sender)
+          [fromString mt.receiver]
+          []
+          []
+          (fromString $ "HSMonitor test mail " <> date)
+          [Mime.plainPart $ fromString $ "Date: " <> date <> "\r\n" <> mt.mailContent]
 
-    let email =
-          Mail.simpleMail
-            (fromString mt.sender)
-            [fromString mt.receiver]
-            []
-            []
-            (fromString $ "HSMonitor test mail " <> date)
-            [Mime.plainPart $ fromString $ "Date: " <> date <> "\r\n" <> mt.mailContent]
+      taskCheck = do
+        now <- getCurrentTime
+        let date = formatTime defaultTimeLocale "%F %T" now
 
-    ( MailSendSuccess
-        <$ Mail.sendMailWithLoginSTARTTLS'
-          mt.server.mailHost
-          (fromIntegral mt.server.mailPort)
-          mt.server.username
-          (UTF8.encodeString mt.server.password)
-          email
-      )
-      `catch` ( \(e :: SomeException) ->
-                  pure $ MailSendFailure $ show e
-              )
+        ( MailSendSuccess
+            <$ Mail.sendMailWithLoginSTARTTLS'
+              mt.server.mailHost
+              (fromIntegral mt.server.mailPort)
+              mt.server.username
+              (UTF8.encodeString mt.server.password)
+              (email date)
+          )
+          `catch` ( \(e :: SomeException) ->
+                      pure $ MailSendFailure $ show e
+                  )
+   in (show $ email "CURRENT DATE", taskCheck)

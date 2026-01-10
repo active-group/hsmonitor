@@ -29,24 +29,28 @@ portTask =
 
 instance MonitoringTask PortTask where
   type TaskReponse PortTask = Bool
-  check = checkPort
+  check = snd . checkPort
   toRiemannEvent = portResultToRiemannEvent
+  prettyCommand = fst . checkPort
 
-checkPort :: PortTask -> IO Bool
+checkPort :: PortTask -> (String, IO Bool)
 checkPort pt =
   let udp =
         case pt.portType of
           UDP -> " -u"
           _ -> ""
-   in fmap interpretResult $
-        check $
-          CmdTask
-            { script = "nc -vvv" <> udp <> " -q 5 -w 1 " <> pt.portHost <> " " <> show pt.port
-            , inStdOut = []
-            , inStdErr = expectedPortType <> [show pt.port, pt.portHost, "succeeded!"]
-            , exitCode = ExitSuccess
-            , expectEmptyError = False
-            }
+      netcatCall = "nc -vvv" <> udp <> " -q 5 -w 1 " <> pt.portHost <> " " <> show pt.port
+   in ( netcatCall
+      , fmap interpretResult $
+          check $
+            CmdTask
+              { script = netcatCall
+              , inStdOut = []
+              , inStdErr = expectedPortType <> [show pt.port, pt.portHost, "succeeded!"]
+              , exitCode = ExitSuccess
+              , expectEmptyError = False
+              }
+      )
   where
     expectedPortType = case pt.portType of
       UDP -> ["udp"]

@@ -29,6 +29,7 @@ class MonitoringTask t where
   internalTimeout _ = Nothing
   check :: t -> IO (TaskReponse t)
   toRiemannEvent :: Service -> Maybe Host -> t -> TaskReponse t -> RiemannEvent
+  prettyCommand :: t -> String
 
 type Service = String
 

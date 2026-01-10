@@ -40,6 +40,11 @@ instance MonitoringTask CmdTask where
   check = checkCmdTask
   toRiemannEvent = cmdToRiemannEvent
 
+  prettyCommand = prettyPrintCmd
+
+prettyPrintCmd :: CmdTask -> String
+prettyPrintCmd t = t.script
+
 checkCmdTask :: CmdTask -> IO CmdResult
 checkCmdTask command = do
   let cp = shell command.script

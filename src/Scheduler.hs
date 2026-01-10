@@ -5,6 +5,7 @@ module Scheduler where
 
 import Control.Concurrent
 import Control.Concurrent.Async
+import Control.Monad
 import Data.Time
 import Riemann
 import System.Random
@@ -66,15 +67,23 @@ execTask service host timeout cfg t = do
       (delayBy timeout)
       (check t)
 
-  sendToRiemannOrPrint cfg $ case res of
-    Left () ->
-      RiemannCritical
-        { riemannService = service
-        , metric = 0
-        , eventHost = host
-        , description = "Timeout reached: " <> show timeout
-        }
-    Right response -> toRiemannEvent service host t response
+  let riemannEvent = case res of
+        Left () ->
+          RiemannCritical
+            { riemannService = service
+            , metric = 0
+            , eventHost = host
+            , description = "Timeout reached: " <> show timeout
+            }
+        Right response -> toRiemannEvent service host t response
+
+  when cfg.debug $ debugPrint service t
+
+  sendToRiemannOrPrint cfg riemannEvent
+
+debugPrint :: (MonitoringTask t) => String -> t -> IO ()
+debugPrint service t =
+  putStrLn $ service <> " Command: " <> prettyCommand t
 
 sendToRiemannOrPrint :: Config -> RiemannEvent -> IO ()
 sendToRiemannOrPrint cfg = case cfg.riemannConfig of
