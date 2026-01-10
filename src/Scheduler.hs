@@ -66,13 +66,17 @@ execTask service host timeout cfg t = do
       (delayBy timeout)
       (check t)
 
-  case res of
+  sendToRiemannOrPrint cfg $ case res of
     Left () ->
-      sendToRiemann cfg $
-        RiemannCritical
-          { riemannService = service
-          , metric = 0
-          , eventHost = host
-          , description = "Timeout reached: " <> show timeout
-          }
-    Right response -> sendToRiemann cfg $ toRiemannEvent service host t response
+      RiemannCritical
+        { riemannService = service
+        , metric = 0
+        , eventHost = host
+        , description = "Timeout reached: " <> show timeout
+        }
+    Right response -> toRiemannEvent service host t response
+
+sendToRiemannOrPrint :: Config -> RiemannEvent -> IO ()
+sendToRiemannOrPrint cfg = case cfg.riemannConfig of
+  Nothing -> print
+  Just riemannCfg -> sendToRiemann riemannCfg

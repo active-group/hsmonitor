@@ -6,16 +6,16 @@ import Control.Monad
 import System.Process
 import Types
 
-sendToRiemann :: Config -> RiemannEvent -> IO ()
+sendToRiemann :: RiemannConfig -> RiemannEvent -> IO ()
 sendToRiemann cfg re = do
   print re
   let cp =
         ( proc
             "riemann-client"
             ( [ "-H"
-              , cfg.riemannHost
+              , cfg.host
               , "-P"
-              , show cfg.riemannPort
+              , show cfg.port
               , "-T"
               , "tcp"
               , "send"

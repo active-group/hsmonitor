@@ -1,9 +1,21 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Config where
 
 import Types
+import Webpage
 
 schedule :: MonitoringConfig
-schedule = MonitoringConfig []
+schedule =
+  MonitoringConfig
+    [ task
+        "ag-website"
+        ( webpage
+            { url = "https://active-group.de"
+            , toAppear = ["Active Group"]
+            }
+        )
+    ]
 
 cfg :: Config
-cfg = Config "localhost" 5555 Nothing
+cfg = Config Nothing Nothing

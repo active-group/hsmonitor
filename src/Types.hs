@@ -1,3 +1,4 @@
+{-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE TypeFamilies #-}
 
@@ -54,9 +55,15 @@ task service t =
     , checkTask = t
     }
 
+data RiemannConfig
+  = RiemannConfig
+  { host :: String
+  , port :: Int
+  }
+  deriving (Show)
+
 data Config = Config
-  { riemannHost :: String
-  , riemannPort :: Int
+  { riemannConfig :: Maybe RiemannConfig
   , startupDelay :: Maybe NominalDiffTime
   }
   deriving (Show)

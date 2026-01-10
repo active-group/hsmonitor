@@ -9,8 +9,7 @@ import Types
 config :: Config -> Parser Config
 config cfg =
   Config
-    <$> riemannHost
-    <*> riemannPort
+    <$> optional riemannConfig
     <*> startupDelay
   where
     riemannHost =
@@ -18,8 +17,6 @@ config cfg =
         ( long "riemann-host"
             <> short 'h'
             <> help "Riemann Host"
-            <> showDefault
-            <> value cfg.riemannHost
         )
     riemannPort =
       option
@@ -27,9 +24,12 @@ config cfg =
         ( long "riemann-port"
             <> short 'p'
             <> help "Riemann Port"
-            <> showDefault
-            <> value cfg.riemannPort
         )
+
+    riemannConfig =
+      RiemannConfig
+        <$> riemannHost
+        <*> riemannPort
 
     startupDelay =
       optional $
