@@ -1,6 +1,7 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE NoFieldSelectors #-}
 
 module Types where
 
@@ -58,11 +59,7 @@ task service t =
     , checkTask = t
     }
 
-data RiemannConfig
-  = RiemannConfig
-  { host :: String
-  , port :: Int
-  }
+data RiemannConfig = RiemannConfig String Int
   deriving (Show)
 
 data Config = Config

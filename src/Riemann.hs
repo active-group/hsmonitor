@@ -7,15 +7,15 @@ import System.Process
 import Types
 
 sendToRiemann :: RiemannConfig -> RiemannEvent -> IO ()
-sendToRiemann cfg re = do
+sendToRiemann (RiemannConfig host port) re = do
   print re
   let cp =
         ( proc
             "riemann-client"
             ( [ "-H"
-              , cfg.host
+              , host
               , "-P"
-              , show cfg.port
+              , show port
               , "-T"
               , "tcp"
               , "send"
