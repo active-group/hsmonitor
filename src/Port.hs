@@ -40,7 +40,7 @@ checkPort pt =
         case pt.portType of
           UDP -> " -u"
           _ -> ""
-      netcatCall = "nc -vvv" <> udp <> " -q 5 -w 1 " <> pt.portHost <> " " <> show pt.port
+      netcatCall = "nc -v" <> udp <> " -z -q 5 -w 1 " <> pt.portHost <> " " <> show pt.port
    in ( netcatCall
       , fmap (second interpretResult) $
           check $
