@@ -9,13 +9,12 @@ import Types
 config :: Config -> Parser Config
 config cfg =
   Config
-    <$> optional riemannConfig
+    <$> (maybe cfg.riemannConfig Just <$> optional riemannConfig)
     <*> startupDelay
-    <*> debug
+    <*> (maybe cfg.debug id <$> optional debug)
   where
     debug =
-      flag
-        False
+      flag'
         True
         ( long "debug"
             <> help "Enables debug printing of commands and outputs"
