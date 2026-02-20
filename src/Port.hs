@@ -47,15 +47,15 @@ checkPort pt =
             CmdTask
               { script = netcatCall
               , inStdOut = []
-              , inStdErr = expectedPortType <> [show pt.port, pt.portHost, "succeeded!"]
+              , inStdErr = [expectedPortType, show pt.port, pt.portHost, "succeeded!"]
               , exitCode = ExitSuccess
               , expectEmptyError = False
               }
       )
   where
     expectedPortType = case pt.portType of
-      UDP -> ["udp"]
-      TCP -> ["tcp"]
+      UDP -> "udp"
+      TCP -> "tcp"
     interpretResult = \case
       CmdOk -> True
       _ -> False
