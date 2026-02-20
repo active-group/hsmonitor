@@ -6,7 +6,6 @@
 module Port where
 
 import Cmd
-import Data.Bifunctor
 import GHC.IO.Exception
 import Types
 
@@ -30,28 +29,25 @@ portTask =
 
 instance MonitoringTask PortTask where
   type TaskReponse PortTask = Bool
-  check = snd . checkPort
+  check = checkPort
   toRiemannEvent = portResultToRiemannEvent
-  prettyCommand = fst . checkPort
 
-checkPort :: PortTask -> (String, IO (RawOutput, Bool))
+checkPort :: PortTask -> CommandResponse PortTask
 checkPort pt =
   let udp =
         case pt.portType of
           UDP -> " -u"
           _ -> ""
       netcatCall = "nc -v" <> udp <> " -z -q 5 -w 1 " <> pt.portHost <> " " <> show pt.port
-   in ( netcatCall
-      , fmap (second interpretResult) $
-          check $
-            CmdTask
-              { script = netcatCall
-              , inStdOut = []
-              , inStdErr = [expectedPortType, show pt.port, pt.portHost, "succeeded!"]
-              , exitCode = ExitSuccess
-              , expectEmptyError = False
-              }
-      )
+   in transformResponse interpretResult $
+        check $
+          CmdTask
+            { script = netcatCall
+            , inStdOut = []
+            , inStdErr = [expectedPortType, show pt.port, pt.portHost, "succeeded!"]
+            , exitCode = ExitSuccess
+            , expectEmptyError = False
+            }
   where
     expectedPortType = case pt.portType of
       UDP -> "udp"

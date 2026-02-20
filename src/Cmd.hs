@@ -40,15 +40,12 @@ instance MonitoringTask CmdTask where
   check = checkCmdTask
   toRiemannEvent = cmdToRiemannEvent
 
-  prettyCommand = prettyPrintCmd
+checkCmdTask :: CmdTask -> CommandResponse CmdTask
+checkCmdTask command = CommandResponse command.script (runCheck command)
 
-prettyPrintCmd :: CmdTask -> String
-prettyPrintCmd t = t.script
-
-checkCmdTask :: CmdTask -> IO (RawOutput, CmdResult)
-checkCmdTask command = do
-  let cp = shell command.script
-  (code, stdout, stderr) <- readCreateProcessWithExitCode cp ""
+runCheck :: CmdTask -> IO (RawOutput, CmdResult)
+runCheck command = do
+  (code, stdout, stderr) <- readCreateProcessWithExitCode (shell command.script) ""
   ([stdout, stderr],)
     <$> if code /= command.exitCode
       then pure $ CmdWrongExitCode code

@@ -51,9 +51,8 @@ data MailResponse
 
 instance MonitoringTask MailTask where
   type TaskReponse MailTask = MailResponse
-  check = snd . checkMail
+  check = checkMail
   toRiemannEvent = mailReponseToRiemannEvent
-  prettyCommand = fst . checkMail
 
 mailReponseToRiemannEvent :: Service -> Maybe Host -> MailTask -> MailResponse -> RiemannEvent
 mailReponseToRiemannEvent service host mt = \case
@@ -73,7 +72,7 @@ mailReponseToRiemannEvent service host mt = \case
           "Sending mail from '" <> mt.sender <> "' to '" <> mt.receiver <> "' failed, response was: '" <> err <> "'"
       }
 
-checkMail :: MailTask -> (String, IO (RawOutput, MailResponse))
+checkMail :: MailTask -> CommandResponse MailTask
 checkMail mt =
   let email date =
         Mail.simpleMail
@@ -84,7 +83,7 @@ checkMail mt =
           (fromString $ "HSMonitor test mail " <> date)
           [Mime.plainPart $ fromString $ "Date: " <> date <> "\r\n" <> mt.mailContent]
 
-      taskCheck = do
+      runCheck = do
         now <- getCurrentTime
         let date = formatTime defaultTimeLocale "%F %T" now
 
@@ -99,4 +98,4 @@ checkMail mt =
           `catch` ( \(e :: SomeException) ->
                       pure ([], MailSendFailure $ show e)
                   )
-   in (show $ email "CURRENT DATE", taskCheck)
+   in CommandResponse (show $ email "CURRENT DATE") runCheck

@@ -6,7 +6,6 @@ module Scheduler where
 import Control.Concurrent
 import Control.Concurrent.Async
 import Control.Monad
-import Data.Bifunctor
 import Data.Time
 import Riemann
 import System.Random
@@ -66,29 +65,36 @@ execTask service host timeout cfg t = do
   res <-
     race
       (delayBy timeout)
-      (check t)
+      (executeCheck $ check t)
 
-  let (rawOutput, riemannEvent) = case res of
-        Left () ->
-          ( []
-          , RiemannCritical
-              { riemannService = service
-              , metric = 0
-              , eventHost = host
-              , description = "Timeout reached: " <> show timeout
-              }
-          )
-        Right response -> second (toRiemannEvent service host t) response
+  let (command, rawOutput, taskReponse) =
+        case res of
+          Left () ->
+            ( ""
+            , []
+            , RiemannCritical
+                { riemannService = service
+                , metric = 0
+                , eventHost = host
+                , description = "Timeout reached: " <> show timeout
+                }
+            )
+          Right (cmd, output, response) -> (cmd, output, toRiemannEvent service host t response)
 
-  when cfg.debug $ debugPrint service t rawOutput
+  when cfg.debug $ debugPrint service command rawOutput
 
-  sendToRiemannOrPrint cfg riemannEvent
+  sendToRiemannOrPrint cfg taskReponse
 
-debugPrint :: (MonitoringTask t) => String -> t -> [String] -> IO ()
-debugPrint service t rawOutput = do
-  putStrLn $ "DEBUG " <> service <> " Command: " <> prettyCommand t
+executeCheck :: CommandResponse t -> IO (Command, RawOutput, TaskReponse t)
+executeCheck cr = do
+  (rawOutput, taskReponse) <- cr.response
+  pure $ (cr.command, rawOutput, taskReponse)
+
+debugPrint :: String -> String -> [String] -> IO ()
+debugPrint service command rawOutput = do
+  putStrLn $ "DEBUG " <> service <> " Command: " <> command
   putStrLn $ "DEBUG " <> service <> " Output:"
-  mapM_ (putStrLn . ("DEBUG " <>)) rawOutput
+  mapM_ (putStrLn . (("DEBUG " <> service <> " ") <>)) $ concatMap lines rawOutput
 
 sendToRiemannOrPrint :: Config -> RiemannEvent -> IO ()
 sendToRiemannOrPrint cfg = case cfg.riemannConfig of
