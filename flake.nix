@@ -48,5 +48,6 @@
     ))
     // {
       overlays.default = import ./nix/overlays.nix { inherit inputs; };
+      nixosModules.default = import ./nix/nixosModules.nix { inherit self; };
     };
 }
