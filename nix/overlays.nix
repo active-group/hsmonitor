@@ -4,15 +4,14 @@ let
     haskellPackages = super.haskellPackages.override {
       overrides =
         hself: hsuper:
+        with (super.haskell.lib);
         let
-          dontHaddock = super.haskell.lib.dontHaddock;
-
           hsmonitor-src = self.nix-gitignore.gitignoreSource [
             "*.git"
             "dist"
             "dist-newstyle"
           ] ../.;
-          hsmonitor = dontHaddock (hself.callCabal2nix "hsmonitor" hsmonitor-src { });
+          hsmonitor = justStaticExecutables (dontHaddock (hself.callCabal2nix "hsmonitor" hsmonitor-src { }));
         in
         {
           # We add ourselves to the set of haskellPackages.
