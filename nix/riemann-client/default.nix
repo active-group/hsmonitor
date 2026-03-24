@@ -5,7 +5,7 @@
   ...
 }:
 
-python3.pkgs.buildPythonApplication rec {
+python3.pkgs.buildPythonApplication {
   pname = "riemann-client";
   version = "7.0.0";
   pyproject = true;
@@ -19,7 +19,7 @@ python3.pkgs.buildPythonApplication rec {
 
   propagatedBuildInputs = with python3.pkgs; [
     click
-    protobuf
+    protobuf6
   ];
 
   passthru.optional-dependencies = with python3.pkgs; {
