@@ -58,7 +58,7 @@ delayToNextExec :: UTCTime -> NominalDiffTime -> IO (NominalDiffTime, UTCTime)
 delayToNextExec lastExecTime interval = do
   let nextExecTime = addUTCTime interval lastExecTime
   delay <- diffUTCTime nextExecTime <$> getCurrentTime
-  pure (delay, nextExecTime)
+  pure (max 0 delay, nextExecTime)
 
 execTask :: (MonitoringTask t) => Service -> Maybe Host -> NominalDiffTime -> Config -> t -> IO ()
 execTask service host timeout cfg t = do
