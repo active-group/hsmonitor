@@ -28,7 +28,7 @@ portTask =
     }
 
 instance MonitoringTask PortTask where
-  type TaskReponse PortTask = Bool
+  type TaskResponse PortTask = Bool
   check = checkPort
   toRiemannEvent = portResultToRiemannEvent
 

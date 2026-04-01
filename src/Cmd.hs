@@ -36,7 +36,7 @@ data CmdResult
   deriving (Show)
 
 instance MonitoringTask CmdTask where
-  type TaskReponse CmdTask = CmdResult
+  type TaskResponse CmdTask = CmdResult
   check = checkCmdTask
   toRiemannEvent = cmdToRiemannEvent
 

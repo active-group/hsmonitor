@@ -45,7 +45,7 @@ webpage =
     }
 
 instance MonitoringTask WebpageTask where
-  type TaskReponse WebpageTask = WebpageResponse
+  type TaskResponse WebpageTask = WebpageResponse
   internalTimeout t = case t.useChrome of
     WithoutChrome -> Nothing
     WithChrome{virtualTimeBudget} -> millisecondsToNominalDiffTime <$> virtualTimeBudget

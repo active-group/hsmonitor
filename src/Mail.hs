@@ -50,12 +50,12 @@ data MailResponse
   deriving (Show)
 
 instance MonitoringTask MailTask where
-  type TaskReponse MailTask = MailResponse
+  type TaskResponse MailTask = MailResponse
   check = checkMail
-  toRiemannEvent = mailReponseToRiemannEvent
+  toRiemannEvent = mailResponseToRiemannEvent
 
-mailReponseToRiemannEvent :: Service -> Maybe Host -> MailTask -> MailResponse -> RiemannEvent
-mailReponseToRiemannEvent service host mt = \case
+mailResponseToRiemannEvent :: Service -> Maybe Host -> MailTask -> MailResponse -> RiemannEvent
+mailResponseToRiemannEvent service host mt = \case
   MailSendSuccess ->
     RiemannOk
       { riemannService = service

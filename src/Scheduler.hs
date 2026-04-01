@@ -67,7 +67,7 @@ execTask service host timeout cfg t = do
       (delayBy timeout)
       (executeCheck $ check t)
 
-  let (command, rawOutput, taskReponse) =
+  let (command, rawOutput, taskResponse) =
         case res of
           Left () ->
             ( ""
@@ -83,12 +83,12 @@ execTask service host timeout cfg t = do
 
   when cfg.debug $ debugPrint service command rawOutput
 
-  sendToRiemannOrPrint cfg taskReponse
+  sendToRiemannOrPrint cfg taskResponse
 
-executeCheck :: CommandResponse t -> IO (Command, RawOutput, TaskReponse t)
+executeCheck :: CommandResponse t -> IO (Command, RawOutput, TaskResponse t)
 executeCheck cr = do
-  (rawOutput, taskReponse) <- cr.response
-  pure $ (cr.command, rawOutput, taskReponse)
+  (rawOutput, taskResponse) <- cr.response
+  pure (cr.command, rawOutput, taskResponse)
 
 debugPrint :: String -> String -> [String] -> IO ()
 debugPrint service command rawOutput = do

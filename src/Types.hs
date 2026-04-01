@@ -32,21 +32,21 @@ type RawOutput = [String]
 data CommandResponse t
   = CommandResponse
   { command :: Command
-  , response :: IO (RawOutput, TaskReponse t)
+  , response :: IO (RawOutput, TaskResponse t)
   }
 
-transformResponse :: (TaskReponse t -> TaskReponse t') -> CommandResponse t -> CommandResponse t'
+transformResponse :: (TaskResponse t -> TaskResponse t') -> CommandResponse t -> CommandResponse t'
 transformResponse f cr = CommandResponse cr.command (fmap (fmap f) cr.response)
 
 class MonitoringTask t where
-  type TaskReponse t
+  type TaskResponse t
   internalTimeout :: t -> Maybe NominalDiffTime
   internalTimeout _ = Nothing
   check :: t -> CommandResponse t
-  toRiemannEvent :: Service -> Maybe Host -> t -> TaskReponse t -> RiemannEvent
+  toRiemannEvent :: Service -> Maybe Host -> t -> TaskResponse t -> RiemannEvent
 
 instance MonitoringTask RiemannEvent where
-  type TaskReponse RiemannEvent = RiemannEvent
+  type TaskResponse RiemannEvent = RiemannEvent
   check re = CommandResponse "" (pure $ ([], re))
   toRiemannEvent _ _ _ = id
 
