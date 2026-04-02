@@ -21,7 +21,7 @@
       in
       {
         packages = {
-          hsmonitor = pkgs.haskell.lib.justStaticExecutables pkgs.haskellPackages.hsmonitor;
+          hsmonitor = pkgs.haskellPackages.hsmonitor;
           riemann-client = pkgs.riemann-client;
           default = self.packages.${system}.hsmonitor;
         };
