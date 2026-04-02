@@ -62,7 +62,7 @@ in
         Group = "monitor";
         Restart = "always";
 
-        ExecStart = "${hsmonitor}/bin/hsmonitor ${if cfg.debug then " --debug" else ""}";
+        ExecStart = "${hsmonitor}/bin/hsmonitor${lib.optionalString cfg.debug " --debug"}";
       };
     };
   };
