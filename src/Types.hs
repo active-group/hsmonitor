@@ -1,8 +1,5 @@
-{-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE GADTs #-}
 {-# LANGUAGE OverloadedRecordDot #-}
 {-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE NoFieldSelectors #-}
 
 module Types where
 
