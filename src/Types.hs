@@ -57,13 +57,19 @@ data Task where
     } ->
     Task
 
+defaultTaskInterval :: NominalDiffTime
+defaultTaskInterval = 60
+
+defaultTaskTimeout :: NominalDiffTime
+defaultTaskTimeout = 10
+
 task :: (MonitoringTask t) => Service -> t -> Task
 task service t =
   Task
-    { interval = 60
+    { interval = defaultTaskInterval
     , service = service
     , host = Nothing
-    , timeout = maybe 10 (max 10) $ internalTimeout t
+    , timeout = maybe defaultTaskTimeout (max defaultTaskTimeout) $ internalTimeout t
     , checkTask = t
     }
 
