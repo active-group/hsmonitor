@@ -60,6 +60,21 @@ delayToNextExec lastExecTime interval = do
   delay <- diffUTCTime nextExecTime <$> getCurrentTime
   pure (max 0 delay, nextExecTime)
 
+timeoutReached :: String -> Maybe Host -> NominalDiffTime -> (Command, RawOutput, RiemannEvent)
+timeoutReached service host timeout =
+  ( ""
+  , []
+  , RiemannCritical
+      { riemannService = service
+      , metric = 0
+      , eventHost = host
+      , description = "Timeout reached: " <> show timeout
+      }
+  )
+
+third :: (t -> c) -> (a, b, t) -> (a, b, c)
+third f (x, y, z) = (x, y, f z)
+
 execTask :: (MonitoringTask t) => Service -> Maybe Host -> NominalDiffTime -> Config -> t -> IO ()
 execTask service host timeout cfg t = do
   res <-
@@ -69,17 +84,8 @@ execTask service host timeout cfg t = do
 
   let (command, rawOutput, taskResponse) =
         case res of
-          Left () ->
-            ( ""
-            , []
-            , RiemannCritical
-                { riemannService = service
-                , metric = 0
-                , eventHost = host
-                , description = "Timeout reached: " <> show timeout
-                }
-            )
-          Right (cmd, output, response) -> (cmd, output, toRiemannEvent service host t response)
+          Left () -> timeoutReached service host timeout
+          Right x -> third (toRiemannEvent service host t) x
 
   when cfg.debug $ debugPrint service command rawOutput
 
