@@ -45,11 +45,6 @@ class MonitoringTask t where
   check :: t -> CommandResponse t
   toRiemannEvent :: Service -> Maybe Host -> t -> TaskResponse t -> RiemannEvent
 
-instance MonitoringTask RiemannEvent where
-  type TaskResponse RiemannEvent = RiemannEvent
-  check re = CommandResponse "" (pure $ ([], re))
-  toRiemannEvent _ _ _ = id
-
 type Service = String
 
 type Host = String
