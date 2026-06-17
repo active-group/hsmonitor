@@ -67,6 +67,15 @@ withPossibleBasicAuth (Just (username, password)) =
   let encode = Char8.pack . UTF8.encodeString
    in setRequestBasicAuth (encode username) (encode password)
 
+urlWithPossibleBasicAuth :: Maybe (String, String) -> String -> String
+urlWithPossibleBasicAuth basicAuth url = case basicAuth of
+  Nothing -> url
+  Just (user, password) ->
+    let https = "https://"
+     in case stripPrefix https url of
+          Nothing -> url
+          Just remainingUrl -> https <> user <> ":" <> password <> "@" <> remainingUrl
+
 getWebpage :: WebpageTask -> CommandResponse WebpageTask
 getWebpage webpageTask =
   case webpageTask.useChrome of
@@ -98,7 +107,7 @@ getWebpageHeadless webpageTask mVirtualBudget =
   let withVirtualWithBudget = case mVirtualBudget of
         Just budget -> ["--virtual-time-budget=" <> show budget]
         Nothing -> []
-      options = ["--headless", "--disable-gpu", "--dump-dom"] <> withVirtualWithBudget <> webpageTask.browserOptions <> [webpageTask.url]
+      options = ["--headless", "--disable-gpu", "--dump-dom"] <> withVirtualWithBudget <> webpageTask.browserOptions <> [urlWithPossibleBasicAuth webpageTask.basicAuth webpageTask.url]
       chromeCall = "chromium-browser " <> unwords options
       runCheck =
         do
