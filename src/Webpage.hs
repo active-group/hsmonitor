@@ -22,8 +22,16 @@ data ChromeOptions
   = WithoutChrome
   | WithChrome
       { virtualTimeBudget :: Maybe Int
+      , ignoreCertErrors :: Bool
       }
   deriving (Show)
+
+withChrome :: ChromeOptions
+withChrome =
+  WithChrome
+    { virtualTimeBudget = Nothing
+    , ignoreCertErrors = False
+    }
 
 data WebpageTask = WebpageTask
   { url :: String
@@ -79,7 +87,7 @@ urlWithPossibleBasicAuth basicAuth url = case basicAuth of
 getWebpage :: WebpageTask -> CommandResponse WebpageTask
 getWebpage webpageTask =
   case webpageTask.useChrome of
-    WithChrome{..} -> getWebpageHeadless webpageTask virtualTimeBudget
+    WithChrome{..} -> getWebpageHeadless webpageTask virtualTimeBudget ignoreCertErrors
     WithoutChrome ->
       let curlCall = "curl " <> maybe "" (\(user, password) -> "-u \"" <> user <> ":" <> password <> "\"") webpageTask.basicAuth <> webpageTask.url
           runCheck =
@@ -102,12 +110,13 @@ customReadProcess cmd args =
   let cp = (proc cmd args){std_err = NoStream}
    in readCreateProcess cp
 
-getWebpageHeadless :: WebpageTask -> Maybe Int -> CommandResponse WebpageTask
-getWebpageHeadless webpageTask mVirtualBudget =
+getWebpageHeadless :: WebpageTask -> Maybe Int -> Bool -> CommandResponse WebpageTask
+getWebpageHeadless webpageTask mVirtualBudget ignoreCertError =
   let withVirtualWithBudget = case mVirtualBudget of
         Just budget -> ["--virtual-time-budget=" <> show budget]
         Nothing -> []
-      options = ["--headless", "--disable-gpu", "--dump-dom"] <> withVirtualWithBudget <> webpageTask.browserOptions <> [urlWithPossibleBasicAuth webpageTask.basicAuth webpageTask.url]
+      withIgnoreCertErrors = ["--ignore-certificate-errors" | ignoreCertError]
+      options = ["--headless", "--disable-gpu", "--dump-dom"] <> withVirtualWithBudget <> withIgnoreCertErrors <> webpageTask.browserOptions <> [urlWithPossibleBasicAuth webpageTask.basicAuth webpageTask.url]
       chromeCall = "chromium-browser " <> unwords options
       runCheck =
         do
