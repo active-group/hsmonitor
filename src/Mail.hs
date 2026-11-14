@@ -15,7 +15,6 @@ import Types
 
 data Server = Server
   { mailHost :: String
-  , mailPort :: Int
   , username :: String
   , password :: String
   }
@@ -38,7 +37,6 @@ mail =
     , server =
         Server
           { mailHost = ""
-          , mailPort = 25
           , username = ""
           , password = ""
           }
@@ -88,9 +86,8 @@ checkMail mt =
         let date = formatTime defaultTimeLocale "%F %T" now
 
         ( ([], MailSendSuccess)
-            <$ Mail.sendMailWithLoginTLS'
+            <$ Mail.sendMailWithLoginTLS
               mt.server.mailHost
-              (fromIntegral mt.server.mailPort)
               mt.server.username
               (UTF8.encodeString mt.server.password)
               (email date)
