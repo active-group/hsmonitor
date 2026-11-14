@@ -88,7 +88,7 @@ checkMail mt =
         let date = formatTime defaultTimeLocale "%F %T" now
 
         ( ([], MailSendSuccess)
-            <$ Mail.sendMailWithLoginSTARTTLS'
+            <$ Mail.sendMailWithLoginTLS'
               mt.server.mailHost
               (fromIntegral mt.server.mailPort)
               mt.server.username
